@@ -22,7 +22,6 @@ export const fetchMedias = async (query = "") => {
   }
 };
 
-
 export const fetchMedia = async (id) => {
   if (!id || typeof id !== "string") {
     return null;
@@ -39,7 +38,6 @@ export const fetchMedia = async (id) => {
     return null;
   }
 };
-
 
 export const submitComment = async (commentData, currentPath) => {
   try {
@@ -90,13 +88,21 @@ export const submitRating = async (ratingData, currentPath) => {
 
 export const uploadMedia = async (formData) => {
   try {
-
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
-    if (!token || role !== "admin") {
-      console.error("Unauthorized: Only admins can upload media.");
-      throw new Error("Unauthorized access.");
+    if (!token) {
+      throw new Error("Please log in to upload media");
+    }
+
+    if (role !== "admin") {
+      throw new Error("Only administrators can upload media");
+    }
+
+    if (isTokenExpired(token)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      throw new Error("Your session has expired. Please log in again");
     }
 
     const response = await axios.post(
@@ -112,8 +118,27 @@ export const uploadMedia = async (formData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error uploading media:", error);
-    throw error;
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      switch (error.response.status) {
+        case 401:
+          throw new Error("Your session has expired. Please log in again");
+        case 403:
+          throw new Error("You don't have permission to upload media");
+        case 413:
+          throw new Error("File size too large");
+        default:
+          throw new Error(
+            error.response.data?.message || "Error uploading media"
+          );
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      throw new Error("No response from server. Please check your connection");
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      throw error;
+    }
   }
 };
-

@@ -63,7 +63,7 @@ const HomePage = () => {
                 </Grid>
               ))}
         </Grid>
-        <MediaTabs mediaData={mediaData} />
+        <MediaTabs mediaData={mediaData} loading={loading} />
       </Container>
     </div>
   );

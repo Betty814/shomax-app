@@ -34,6 +34,8 @@ const UploadMediaPage = () => {
 
     setLoading(true);
     setProgress(10);
+    setError("");
+    setSuccess("");
 
     const formData = new FormData();
     formData.append("title", title);
@@ -43,15 +45,19 @@ const UploadMediaPage = () => {
     try {
       await uploadMedia(formData);
       setSuccess("Media uploaded successfully!");
-      setError("");
       setTitle("");
       setCategory("");
       setFile(null);
       setPreview(null);
       setProgress(0);
     } catch (error) {
-      setError("Error uploading media");
-      console.log(error);
+      setError(error.message);
+      if (error.message.includes("log in")) {
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
